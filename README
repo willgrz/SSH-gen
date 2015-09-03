@@ -1,0 +1,6 @@
+#SSH-gen
+#Generates alias file for bash and a single executable (aka sshvpn) for SSHing into servers
+#Notes: 
+#Make sure to change hostname for CJDNS lookup in gen.sh
+#Usage:
+#Put servers into serverlist

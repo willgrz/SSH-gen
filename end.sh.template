@@ -1,0 +1,80 @@
+if [ -z "$int" ]; then
+	echo "Server not found - exiting"
+	exit 1
+fi
+
+
+if [ $(checklocal) == "0" ]; then
+        #client has INT IP
+        if [ "$int" != "0:0" ]; then
+        #server has int IP
+                #convert IP:PORT to IP and PORT separately
+                intip=$(echo $int | sed -e 's/:/ /g' | awk '{print $1}')
+                intport=$(echo $int | sed -e 's/:/ /g' | awk '{print $2}')
+                #connect
+                ssh -l root $intip -i $KEY -p $intport -l $suser $rcommand
+        else
+        #server has no int IP, check if it has cjdns
+                if [ "$hb" != "0:0" ]; then
+                #server has cjdns
+                cjtest=$(ping6 -c 5 $hb | grep "16 bytes from" >>/dev/null; echo $?)
+                        if [ "$cjtest" == "0" ];then
+                        #cjdns ping ok, set port from INT IP as it varies for internal KVMs on home NAT
+                                if [ "$int" == "0:0" ]; then
+                                        hbport=$(echo $ext | sed -e 's/:/ /g' | awk '{print $2}')
+else
+                                        hbport=$(echo $int | sed -e 's/:/ /g' | awk '{print $2}')
+                                fi
+                        #connect
+                        ssh -l root $hb -i $KEY -p $hbport -l $suser $rcommand
+                        else
+                        #cjping failed, use ext
+                        extip=$(echo $ext | sed -e 's/:/ /g' | awk '{print $1}')
+                        extport=$(echo $ext | sed -e 's/:/ /g' | awk '{print $2}')
+                        #connect
+                        ssh -l root $extip -i $KEY -p $extport -l $suser $rcommand
+                        fi
+                else
+                #has no cj, use ext
+                        extip=$(echo $ext | sed -e 's/:/ /g' | awk '{print $1}')
+                        extport=$(echo $ext | sed -e 's/:/ /g' | awk '{print $2}')
+                        ssh -l root $extip -i $KEY -p $extport -l $suser $rcommand
+fi
+
+
+        fi
+
+
+
+elif [ $(checklocal) == "1" ]; then
+        #client has no INT IP
+                #check if it has cjdns
+                if [ "$hb" == "0:0" ]; then
+                #has no cjdns, use ext
+                extip=$(echo $ext | sed -e 's/:/ /g' | awk '{print $1}')
+                extport=$(echo $ext | sed -e 's/:/ /g' | awk '{print $2}')
+                #connect
+            ssh -l root $extip -i $KEY -p $extport -l $suser $rcommand
+                else
+                #has cjdns IP
+                #check if ping is ok
+                cjtest=$(ping6 -c 5 $hb | grep "16 bytes from" >>/dev/null; echo $?)
+                        if [ "$cjtest" == "0" ];then
+                        #cjdns ping ok, set port from INT IP as it varies for internal KVMs on home NAT
+                                if [ "$int" == "0:0" ]; then
+                                        hbport=$(echo $ext | sed -e 's/:/ /g' | awk '{print $2}')
+else
+                                        hbport=$(echo $int | sed -e 's/:/ /g' | awk '{print $2}')
+                                fi                        
+                        #connect
+                    ssh -l root $hb -i $KEY -p $hbport -l $luser $rcommand
+                        else
+                        #has no cjdns, fall back to ext
+                        extip=$(echo $ext | sed -e 's/:/ /g' | awk '{print $1}')
+                        extport=$(echo $ext | sed -e 's/:/ /g' | awk '{print $2}')
+                        #connect
+                    ssh -l root $extip -i $KEY -p $extport -l $suser $rcommand
+                        fi
+                fi
+fi
+

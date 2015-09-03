@@ -1,0 +1,49 @@
+#!/bin/bash
+server=$1
+intnet="10.250."
+
+#command
+if [ -n "$2" ]; then
+	rcommand=$(echo $@ | sed -e "s/$server//")
+fi
+
+#Keys
+#fix mac
+if [ "$(uname)" == "Darwin" ]; then
+	KEY="/Users/william/.ssh/id_dsa"
+#fix thinkpad
+elif [ "$(hostname)" == "linux-h0va.site" ]; then
+	KEY="/home/william/.ssh/id_dsa"
+else
+	KEY="/root/.ssh/id_dsa"
+fi
+
+##check local connection
+function checklocal {
+if [ "$(uname)" == "Darwin" ]; then
+   #Mac/Lin
+   ifconfig | grep $intnet >> /dev/null
+    if [ $? -ne 0 ]; then
+     echo "1" #VPN not ok
+   else
+     echo "0" #VPN ok
+   fi
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+   #Mac/Lin
+   ifconfig | grep $intnet >> /dev/null
+    if [ $? -ne 0 ]; then
+     echo "1" #VPN not ok
+   else
+     echo "0" #VPN ok
+   fi
+elif [ "$(expr substr $(uname -s) 1 9)" == "CYGWIN_NT" ]; then
+    route PRINT | egrep '($intnet)'  >> /dev/null
+    if [ $? -ne 0 ]; then
+     echo "1" #VPN not ok
+   else
+     echo "0" #VPN ok
+   fi
+fi
+}
+
+
