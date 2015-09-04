@@ -1,0 +1,3 @@
+#name intip:port extip:port username
+#use 0:0 if no int
+atproxy-ovz-AT-EDIS 0:0 extip:22 root
